@@ -1,45 +1,31 @@
 import './App.css';
 import { useState } from 'react';
+import  Square  from './components/square/square';
 
 function App() {
   return (
     <div className="App">
-      <Board />
+      <Game />
     </div>
   );
 }
 
 export default App;
 
-function Square({ value, onSquareClick }: any) {
-
-  return (
-    <button
-      className="square" onClick={onSquareClick}>
-      {value}
-    </button>
-
-  );
-}
-
-function Board() {
-
-  const [xIsNext, setXIsNext] = useState(true); //remember turns
-  const [squares, setSquares] = useState(Array(9).fill(null));
+function Board({ xIsNext, squares, onPlay }: any) {
 
   function handleCLick(i: any) {
     //if there is already a value in the square, stop. dont overwrite it
     if (squares[i] || calculateWinner(squares))
-    return;
+      return;
 
     const nextSquares = squares.slice();
-    
-    xIsNext ? nextSquares[i] = "X" : nextSquares[i] = "O";
 
-    setSquares(nextSquares);
-    setXIsNext(!xIsNext);
+    xIsNext ? (nextSquares[i] = "X") : (nextSquares[i] = "O");
+
+    onPlay(nextSquares);
   }
-  
+
   const winner = calculateWinner(squares);
   let status;
   if (winner) {
@@ -50,7 +36,7 @@ function Board() {
 
   return (
     <>
-    <div className="status">{status}</div>
+      <div className="status">{status}</div>
       <div className="boardRow">
         <Square value={squares[0]} onSquareClick={() => handleCLick(0)} />
         <Square value={squares[1]} onSquareClick={() => handleCLick(1)} />
@@ -73,8 +59,32 @@ function Board() {
 
 }
 
-function calculateWinner(squares: any) 
-{
+function Game() {
+
+  const [xIsNext, setXIsNext] = useState(true);
+  const [history, setHistory] = useState([Array(9).fill(null)]);
+  const currentSquares = history[history.length - 1];//ultima varianta a tablei
+
+  function handlePlay(nextSquares: any) 
+  {
+    setHistory([...history, nextSquares]);
+    setXIsNext(!xIsNext);
+  }
+
+  return (
+    <div className="game">
+      <div className="game-board">
+        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
+      </div>
+      <div className="game-info">
+        <ol>{/*TODO*/}</ol>
+      </div>
+    </div>
+
+  );
+}
+
+function calculateWinner(squares: any) {
   const lines = [
     [0, 1, 2],
     [3, 4, 5],
@@ -86,8 +96,7 @@ function calculateWinner(squares: any)
     [2, 4, 6]
   ];//horizontally, vertically, diagonally
 
-  for (let i = 0; i < lines.length; i++) 
-  {
+  for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
       return squares[a];
